@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # PPE Safety API
+  ppe-safety-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ppe-safety-api:latest
+    container_name: ppe-safety-api
+    restart: unless-stopped
+    ports:
+      - "8090:8080"  # Using 8090 to avoid conflict with jipflix-gateway on 8080
+    environment:
+      # Database - connects to your existing jipflix-postgres container
+      SPRING_DATASOURCE_URL: jdbc:postgresql://jipflix-postgres-1:5432/ppesafety
+      SPRING_DATASOURCE_USERNAME: murat
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      
+      # Redis - connects to your existing jipflix-redis container
+      SPRING_DATA_REDIS_HOST: jipflix-redis-1
+      SPRING_DATA_REDIS_PORT: 6379
+      
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-mur4th4z4r}
+      JWT_EXPIRATION: 86400000
+      
+      # JVM options
+      JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+    networks:
+      - jipflix_default  # Join your existing network
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL - only if you want a separate instance (optional)
+  postgres:
+    image: postgres:16
+    container_name: ppe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ppesafety
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123123xxw}
+    volumes:
+      - ppe-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Different port to avoid conflict with jipflix-postgres
+    networks:
+      - jipflix_default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - only if you want a separate instance (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: ppe-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Different port to avoid conflict with jipflix-redis
+    volumes:
+      - ppe-redis-data:/data
+    networks:
+      - jipflix_default
+
+volumes:
+  ppe-postgres-data:
+  ppe-redis-data:
+
+networks:
+  jipflix_default:
+    external: true  # Use existing jipflix network

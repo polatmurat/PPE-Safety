@@ -1,0 +1,46 @@
+version: '3.8'
+
+# Simplified version - uses your EXISTING jipflix postgres and redis
+# No new database containers needed!
+
+services:
+  ppe-safety-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ppe-safety-api:latest
+    container_name: ppe-safety-api
+    restart: unless-stopped
+    ports:
+      - "8090:8080"  # Port 8090 externally (8080 is used by jipflix-gateway)
+    environment:
+      # Connect to existing jipflix-postgres (create ppesafety database first!)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://jipflix-postgres-1:5432/ppesafety
+      SPRING_DATASOURCE_USERNAME: murat
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      
+      # Connect to existing jipflix-redis
+      SPRING_DATA_REDIS_HOST: jipflix-redis-1
+      SPRING_DATA_REDIS_PORT: 6379
+      
+      # JWT Secret (change in production!)
+      JWT_SECRET: ${JWT_SECRET:mur4th4z4r-ppe-safety-secret-key-2026-super-secure}
+      JWT_EXPIRATION: 86400000
+      
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # JVM
+      JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Dspring.profiles.active=prod"
+    networks:
+      - jipflix_jipflix
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  jipflix_jipflix:
+    external: true
