@@ -24,7 +24,7 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       
       # JWT Secret (change in production!)
-      JWT_SECRET: ${JWT_SECRET:mur4th4z4r-ppe-safety-secret-key-2026-super-secure}
+      JWT_SECRET: ${JWT_SECRET:-mur4th4z4r-ppe-safety-secret-key-2026-super-secure}
       JWT_EXPIRATION: 86400000
       
       # Spring Profile
