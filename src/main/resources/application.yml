@@ -61,6 +61,11 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+  servers:
+    - url: https://api.jipflix.com
+      description: Production HTTPS
+    - url: http://localhost:8080
+      description: Local Development
 
 # Actuator for health checks
 management:
