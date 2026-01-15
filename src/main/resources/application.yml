@@ -62,7 +62,7 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
   servers:
-    - url: https://api.jipflix.com
+    - url: https://api.jipflix.com/ppe-safety
       description: Production HTTPS
     - url: http://localhost:8080
       description: Local Development
